@@ -173,4 +173,31 @@ namespace TarjetaTests
             Assert.Equal("Tarjeta Nº: 12345, Saldo: $2500.50", resultado);
         }
     }
+    public class FranquiciaTests
+    {
+        [Fact]
+        public void MedioBoleto_DeberiaCobrarMitad()
+        {
+            var t = new MedioBoleto("005", 1000);
+            t.PagarBoleto(800);
+            Assert.Equal(600, t.Saldo);
+        }
+
+        [Fact]
+        public void FranquiciaCompleta_DeberiaCobrarEntero()
+        {
+            var t = new FranquiciaCompleta("006", 1000);
+            t.PagarBoleto(800);
+            Assert.Equal(200, t.Saldo);
+        }
+
+        [Fact]
+        public void BoletoGratuito_NoDeberiaDescontarNada()
+        {
+            var t = new BoletoGratuitoEstudiantil("007", 1000);
+            t.PagarBoleto(800);
+            Assert.Equal(1000, t.Saldo);
+        }
+    }
+}
 }

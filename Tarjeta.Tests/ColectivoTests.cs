@@ -41,6 +41,8 @@ namespace Tarjeta.Tests
         [Test]
         public void PagarCon_InsufficientBalance_ReturnsNull()
         {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 1000);
             // Arrange - Saldo insuficiente que excede el límite negativo
             var tarjeta = new TarjetaClase("123", 0);
             var colectivo = new Colectivo("Linea 1");

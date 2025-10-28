@@ -10,9 +10,22 @@ namespace Tarjeta.Clases
 
         public Boleto? PagarCon(Tarjeta tarjeta, decimal monto = 1580)
         {
-            if (tarjeta.DescontarSaldo(monto))
+            // Usar el método PagarBoleto que puede ser sobrescrito por subclases
+            if (tarjeta.PagarBoleto(monto))
             {
-                return new Boleto(Linea, monto);
+                // Determinar el monto real cobrado según el tipo de tarjeta
+                decimal montoReal = monto;
+                
+                if (tarjeta is MedioBoleto)
+                {
+                    montoReal = monto / 2;
+                }
+                else if (tarjeta is BoletoGratuitoEstudiantil)
+                {
+                    montoReal = 0;
+                }
+                
+                return new Boleto(Linea, montoReal);
             }
             
             // Si no hay saldo suficiente

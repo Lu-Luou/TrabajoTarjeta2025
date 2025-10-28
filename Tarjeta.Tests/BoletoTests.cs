@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Tarjeta.Clases;
+using TarjetaClase = Tarjeta.Clases.Tarjeta;
 
 namespace Tarjeta.Tests
 {
@@ -37,3 +38,4 @@ namespace Tarjeta.Tests
         }
     }
 }
+
