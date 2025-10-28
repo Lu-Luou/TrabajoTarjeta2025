@@ -44,10 +44,6 @@ namespace Tarjeta.Clases
             Saldo -= monto;
             return true;
         }
-        public bool PagarBoleto(decimal monto)
-        {
-            return DescontarSaldo(monto);
-        }
 
         public virtual bool PagarBoleto(decimal monto)
         {

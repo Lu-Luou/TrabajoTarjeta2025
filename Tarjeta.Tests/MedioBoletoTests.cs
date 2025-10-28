@@ -38,7 +38,7 @@ namespace Tarjeta.Tests
         }
 
         [Test]
-        public void PagarBoleto_SaldoInsuficienteParaMitad_RetornaFalse()
+        public void PagarBoleto_SaldoInsuficienteParaMitad_PermiteSaldoNegativo()
         {
             // Arrange
             var tarjeta = new MedioBoleto("123", 500);
@@ -48,8 +48,8 @@ namespace Tarjeta.Tests
             bool resultado = tarjeta.PagarBoleto(monto);
 
             // Assert
-            Assert.IsFalse(resultado);
-            Assert.AreEqual(500, tarjeta.Saldo); // No cambia
+            Assert.IsTrue(resultado); // Permite saldo negativo
+            Assert.AreEqual(-290, tarjeta.Saldo); // Paga 790 (mitad de 1580), queda -290
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace Tarjeta.Tests
         }
 
         [Test]
-        public void Colectivo_PagarConMedioBoleto_SaldoInsuficiente_ReturnNull()
+        public void Colectivo_PagarConMedioBoleto_SaldoInsuficiente_GeneraBoleto()
         {
             // Arrange
             var tarjeta = new MedioBoleto("123", 500);
@@ -96,8 +96,9 @@ namespace Tarjeta.Tests
             var boleto = colectivo.PagarCon(tarjeta, monto);
 
             // Assert
-            Assert.IsNull(boleto);
-            Assert.AreEqual(500, tarjeta.Saldo); // No cambia
+            Assert.IsNotNull(boleto); // Genera boleto con saldo negativo
+            Assert.AreEqual(790, boleto.Monto); // Boleto de medio precio
+            Assert.AreEqual(-290, tarjeta.Saldo); // Saldo negativo
         }
     }
 }

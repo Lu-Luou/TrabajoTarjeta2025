@@ -38,7 +38,7 @@ namespace Tarjeta.Tests
         }
 
         [Test]
-        public void PagarBoleto_SaldoInsuficiente_RetornaFalse()
+        public void PagarBoleto_SaldoInsuficiente_PermiteSaldoNegativo()
         {
             // Arrange
             var tarjeta = new FranquiciaCompleta("123", 1000);
@@ -48,8 +48,8 @@ namespace Tarjeta.Tests
             bool resultado = tarjeta.PagarBoleto(monto);
 
             // Assert
-            Assert.IsFalse(resultado);
-            Assert.AreEqual(1000, tarjeta.Saldo); // No cambia
+            Assert.IsTrue(resultado); // Permite saldo negativo
+            Assert.AreEqual(-580, tarjeta.Saldo); // Saldo se vuelve negativo
         }
 
         [Test]
