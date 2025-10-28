@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarjeta", "Tarjeta\Tarjeta.csproj", "{95F6FC42-B987-4134-97AF-A62CC8F4F131}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TarjetaTests", "TarjetaTests\TarjetaTests.csproj", "{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,18 +27,6 @@ Global
 		{95F6FC42-B987-4134-97AF-A62CC8F4F131}.Release|x64.Build.0 = Release|Any CPU
 		{95F6FC42-B987-4134-97AF-A62CC8F4F131}.Release|x86.ActiveCfg = Release|Any CPU
 		{95F6FC42-B987-4134-97AF-A62CC8F4F131}.Release|x86.Build.0 = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|x64.Build.0 = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Debug|x86.Build.0 = Debug|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|x64.ActiveCfg = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|x64.Build.0 = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|x86.ActiveCfg = Release|Any CPU
-		{5C4B2341-F95B-4A1A-9D3D-351AE3FA4803}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
