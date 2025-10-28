@@ -1,5 +1,6 @@
 using Xunit;
 using TarjetaClass = Tarjeta.Clases.Tarjeta;
+using Tarjeta.Clases;
 
 namespace TarjetaTests
 {
@@ -127,7 +128,7 @@ namespace TarjetaTests
         [Fact]
         public void DescontarSaldo_PuedeLlegarHastaMenos1200()
         {
-            var t = new Tarjeta("003", 0);
+            var t = new TarjetaClass("003", 0);
             bool resultado = t.DescontarSaldo(1000);
 
             Assert.True(resultado);
@@ -137,14 +138,17 @@ namespace TarjetaTests
         [Fact]
         public void DescontarSaldo_NoDebeSuperarMenos1200()
         {
-            var t = new Tarjeta("004", -1000);
+            var t = new TarjetaClass("004", -1000);
             bool resultado = t.DescontarSaldo(300);
 
             Assert.False(resultado);
             Assert.Equal(-1000, t.Saldo);
+        }
+
+        [Fact]
         public void PagarBoleto_DeberiaDescontarSaldo()
         {
-            var t = new Tarjeta("001", 1000);
+            var t = new TarjetaClass("001", 1000);
             bool resultado = t.PagarBoleto(400);
 
             Assert.True(resultado);
@@ -152,16 +156,14 @@ namespace TarjetaTests
         }
 
         [Fact]
-        public void PagarBoleto_NoDeberiaPermitirSaldoNegativo()
+        public void PagarBoleto_PermiteSaldoNegativoHastaLimite()
         {
-            var t = new Tarjeta("002", 300);
+            var t = new TarjetaClass("002", 300);
             bool resultado = t.PagarBoleto(500);
 
-            Assert.False(resultado);
-            Assert.Equal(300, t.Saldo);
+            Assert.True(resultado);
+            Assert.Equal(-200, t.Saldo);
         }
-    }
-}
 
         [Fact]
         public void ToString_DeberiaRetornarFormatoCorrect()
@@ -173,6 +175,7 @@ namespace TarjetaTests
             Assert.Equal("Tarjeta Nº: 12345, Saldo: $2500.50", resultado);
         }
     }
+
     public class FranquiciaTests
     {
         [Fact]
@@ -199,5 +202,4 @@ namespace TarjetaTests
             Assert.Equal(1000, t.Saldo);
         }
     }
-}
 }
