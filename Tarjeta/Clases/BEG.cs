@@ -5,13 +5,10 @@
         private int ViajesGratisHoy { get; set; }
         private DateTime FechaUltimoConteo { get; set; }
         private const int MAX_VIAJES_GRATIS = 2;
-        public BoletoGratuitoEstudiantil(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial)
-        {
-            Tipo = "BEG";
-        }
 
         public BEG(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial)
         {
+            Tipo = "BEG";
             ViajesGratisHoy = 0;
             FechaUltimoConteo = DateTime.Today;
         }
