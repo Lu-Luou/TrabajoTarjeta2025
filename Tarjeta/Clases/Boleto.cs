@@ -21,7 +21,7 @@ namespace Tarjeta.Clases
 
         public override string ToString()
         {
-            return $"Fecha: {FechaHora}, Tarjeta: {TipoTarjeta}, Línea: {LineaColectivo}, Total abonado: {TotalAbonado}, Saldo restante: {SaldoRestante}, ID: {IDTarjeta}";
+            return $"Fecha: {FechaHora}, Tarjeta: {TipoTarjeta}, Línea: {Linea}, Total abonado: {TotalAbonado}, Saldo restante: {SaldoRestante}, ID: {IDTarjeta}";
         }
     }
 }
