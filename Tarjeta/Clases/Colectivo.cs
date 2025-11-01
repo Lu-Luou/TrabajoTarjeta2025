@@ -25,7 +25,13 @@ namespace Tarjeta.Clases
                     montoReal = 0;
                 }
                 
-                return new Boleto(Linea, montoReal);
+                return new Boleto(
+                    tarjeta.Tipo,         // Tipo de tarjeta
+                    Linea,                // Línea del colectivo
+                    montoReal,            // Total abonado
+                    tarjeta.Saldo,        // Saldo restante
+                    tarjeta.Numero        // ID de la tarjeta
+                );
             }
             
             // Si no hay saldo suficiente
