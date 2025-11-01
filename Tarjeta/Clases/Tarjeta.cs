@@ -7,10 +7,13 @@ namespace Tarjeta.Clases
         private const decimal LIMITE_SALDO = 40000;
         private const decimal LIMITE_NEGATIVO = -1200;
 
+        public string Tipo { get; set; }
+
         public Tarjeta(string numero, decimal saldoInicial = 0)
         {
             Numero = numero;
             Saldo = saldoInicial;
+            Tipo = "Normal";
         }
 
         public bool Recargar(decimal monto)
