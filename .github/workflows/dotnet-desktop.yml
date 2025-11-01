@@ -1,7 +1,5 @@
 name: .NET CI/CD with Code Coverage
 
-codecov: 
-token: 72447689-86d5-4066-ad95-e587db3d21a4
 
 on:
   push:
