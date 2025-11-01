@@ -20,7 +20,7 @@ namespace Tarjeta.Clases
                 {
                     montoReal = monto / 2;
                 }
-                else if (tarjeta is BoletoGratuitoEstudiantil)
+                else if (tarjeta is BEG)
                 {
                     montoReal = 0;
                 }
