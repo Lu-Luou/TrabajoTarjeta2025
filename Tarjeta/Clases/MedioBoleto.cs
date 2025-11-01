@@ -2,7 +2,10 @@ namespace Tarjeta.Clases
 {
     public class MedioBoleto : Tarjeta
     {
-        public MedioBoleto(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial) {}
+        public MedioBoleto(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial)
+        {
+            Tipo = "MedioBoleto";
+        }
 
         public override bool PagarBoleto(decimal monto)
         {
