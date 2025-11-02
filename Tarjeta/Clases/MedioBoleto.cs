@@ -15,9 +15,9 @@ namespace Tarjeta.Clases
             ViajesConDescuentoHoy = 0;
         }
 
-        public override bool PagarBoleto(decimal monto)
+        public override Boleto? PagarBoleto(Colectivo colectivo, DateTime fechaHora)
         {
-            DateTime ahora = DateTime.Now;
+            DateTime ahora = fechaHora;
 
             // Verificar si pasaron 5 minutos desde el último viaje
             if (UltimoViaje.HasValue)
@@ -25,7 +25,7 @@ namespace Tarjeta.Clases
                 TimeSpan tiempoTranscurrido = ahora - UltimoViaje.Value;
                 if (tiempoTranscurrido.TotalMinutes < MINUTOS_ENTRE_VIAJES)
                 {
-                    return false; // No han pasado 5 minutos
+                    return null; // No se pudo pagar (no pasaron 5 minutos)
                 }
             }
 
@@ -41,6 +41,7 @@ namespace Tarjeta.Clases
             }
 
             // Determinar el monto a cobrar
+            decimal monto = colectivo.Precio;
             decimal montoCobrar;
             if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
             {
@@ -54,18 +55,26 @@ namespace Tarjeta.Clases
             }
 
             // Intentar pagar
-            bool resultado = base.PagarBoleto(montoCobrar);
+            if (!DescontarSaldo(montoCobrar))
+                return null; // No se pudo pagar (saldo insuficiente)
 
-            if (resultado)
+            var boleto = new Boleto(
+                tipoTarjeta: Tipo,
+                linea: colectivo.Linea,
+                totalAbonado: montoCobrar,
+                saldoRestante: Saldo,
+                idTarjeta: Numero
+            );
+
+            boletos.Add(boleto);
+
+            UltimoViaje = ahora;
+            if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
             {
-                UltimoViaje = ahora;
-                if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
-                {
-                    ViajesConDescuentoHoy++;
-                }
+                ViajesConDescuentoHoy++;
             }
 
-            return resultado;
+            return boleto;
         }
     }
 }

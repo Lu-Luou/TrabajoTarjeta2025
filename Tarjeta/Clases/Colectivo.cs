@@ -3,39 +3,17 @@ namespace Tarjeta.Clases
     public class Colectivo
     {
         public string Linea { get; set; }
+        public decimal Precio { get; set; } = 1580;
+
         public Colectivo(string linea)
         {
             Linea = linea;
         }
 
-        public Boleto? PagarCon(Tarjeta tarjeta, decimal monto = 1580)
+        public Boleto? PagarCon(Tarjeta tarjeta)
         {
             // Usar el método PagarBoleto que puede ser sobrescrito por subclases
-            if (tarjeta.PagarBoleto(monto))
-            {
-                // Determinar el monto real cobrado según el tipo de tarjeta
-                decimal montoReal = monto;
-                
-                if (tarjeta is MedioBoleto)
-                {
-                    montoReal = monto / 2;
-                }
-                else if (tarjeta is BEG)
-                {
-                    montoReal = 0;
-                }
-                
-                return new Boleto(
-                    tarjeta.Tipo,         // Tipo de tarjeta
-                    Linea,                // Línea del colectivo
-                    montoReal,            // Total abonado
-                    tarjeta.Saldo,        // Saldo restante
-                    tarjeta.Numero        // ID de la tarjeta
-                );
-            }
-            
-            // Si no hay saldo suficiente
-            return null;
+            return tarjeta.PagarBoleto(this, DateTime.Now);
         }
         public override string ToString()
         {

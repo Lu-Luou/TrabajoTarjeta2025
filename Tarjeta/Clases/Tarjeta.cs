@@ -11,7 +11,7 @@ namespace Tarjeta.Clases
         public string Tipo { get; set; }
 
         // Registro de boletos emitidos
-        private List<Boleto> boletos = new List<Boleto>();
+        protected List<Boleto> boletos = new List<Boleto>();
 
         public Tarjeta(string numero, decimal saldoInicial = 0)
         {
@@ -43,7 +43,7 @@ namespace Tarjeta.Clases
         }
 
         // Nuevo método principal: pagar boleto (considerando trasbordo)
-        public virtual Boleto PagarBoleto(Colectivo colectivo, DateTime fechaHora)
+        public virtual Boleto? PagarBoleto(Colectivo colectivo, DateTime fechaHora)
         {
             bool esTrasbordo = EsTrasbordoValido(colectivo, fechaHora);
 
