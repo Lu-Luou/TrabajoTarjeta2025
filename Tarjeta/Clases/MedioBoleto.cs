@@ -1,6 +1,6 @@
 namespace Tarjeta.Clases
 {
-    public class MedioBoleto : Tarjeta
+    public class MedioBoleto : Tarjeta, IFranquicia
     {
         private DateTime? UltimoViaje { get; set; }
         private DateTime? FechaInicioConteo { get; set; }
@@ -10,71 +10,75 @@ namespace Tarjeta.Clases
 
         public MedioBoleto(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial) 
         {
+            Tipo = "MedioBoleto";
             UltimoViaje = null;
             FechaInicioConteo = null;
             ViajesConDescuentoHoy = 0;
         }
 
-        public override Boleto? PagarBoleto(Colectivo colectivo, DateTime fechaHora)
+        public bool PuedeUsarse(DateTime fecha)
         {
-            DateTime ahora = fechaHora;
-
             // Verificar si pasaron 5 minutos desde el último viaje
             if (UltimoViaje.HasValue)
             {
-                TimeSpan tiempoTranscurrido = ahora - UltimoViaje.Value;
+                TimeSpan tiempoTranscurrido = fecha - UltimoViaje.Value;
                 if (tiempoTranscurrido.TotalMinutes < MINUTOS_ENTRE_VIAJES)
                 {
-                    return null; // No se pudo pagar (no pasaron 5 minutos)
+                    return false; // No han pasado 5 minutos
                 }
             }
 
             // Verificar si es un nuevo día y resetear el contador
-            if (FechaInicioConteo.HasValue && FechaInicioConteo.Value.Date != ahora.Date)
+            if (FechaInicioConteo.HasValue && FechaInicioConteo.Value.Date != fecha.Date)
             {
                 ViajesConDescuentoHoy = 0;
-                FechaInicioConteo = ahora;
+                FechaInicioConteo = fecha;
             }
             else if (!FechaInicioConteo.HasValue)
             {
-                FechaInicioConteo = ahora;
+                FechaInicioConteo = fecha;
             }
 
-            // Determinar el monto a cobrar
-            decimal monto = colectivo.Precio;
-            decimal montoCobrar;
+            return true; // Puede usarse si pasa las verificaciones
+        }
+
+        public decimal CalcularTarifa(decimal tarifa)
+        {
             if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
             {
-                // Aplicar descuento (mitad del precio)
-                montoCobrar = monto / 2;
+                return tarifa / 2; // Aplicar descuento (mitad del precio)
             }
             else
             {
-                // Cobrar precio completo (tercer viaje del día en adelante)
-                montoCobrar = monto;
+                return tarifa; // Cobrar precio completo
             }
+        }
+
+        public override bool PagarBoleto(decimal monto)
+        {
+            DateTime ahora = DateTime.Now;
+
+            if (!PuedeUsarse(ahora))
+            {
+                return false;
+            }
+
+            // Determinar el monto a cobrar usando CalcularTarifa
+            decimal montoCobrar = CalcularTarifa(monto);
 
             // Intentar pagar
-            if (!DescontarSaldo(montoCobrar))
-                return null; // No se pudo pagar (saldo insuficiente)
+            bool resultado = base.PagarBoleto(montoCobrar);
 
-            var boleto = new Boleto(
-                tipoTarjeta: Tipo,
-                linea: colectivo.Linea,
-                totalAbonado: montoCobrar,
-                saldoRestante: Saldo,
-                idTarjeta: Numero
-            );
-
-            boletos.Add(boleto);
-
-            UltimoViaje = ahora;
-            if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
+            if (resultado)
             {
-                ViajesConDescuentoHoy++;
+                UltimoViaje = ahora;
+                if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
+                {
+                    ViajesConDescuentoHoy++;
+                }
             }
 
-            return boleto;
+            return resultado;
         }
     }
 }

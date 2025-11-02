@@ -20,8 +20,6 @@ namespace Tarjeta.Clases
 
         public Boleto? PagarCon(Tarjeta tarjeta)
         {
-            // Usar el método PagarBoleto que puede ser sobrescrito por subclases
-            return tarjeta.PagarBoleto(this, DateTime.Now);
             // Calcular monto real según el tipo de tarjeta
             decimal monto = Precio;
 
