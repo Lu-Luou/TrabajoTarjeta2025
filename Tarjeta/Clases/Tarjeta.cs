@@ -7,8 +7,9 @@ namespace Tarjeta.Clases
         public decimal SaldoPendiente { get; set; } = 0;
         private const decimal LIMITE_SALDO = 56000;
         private const decimal LIMITE_NEGATIVO = -1200;
+        private const decimal TARIFA_BASE = 1580;
 
-        public string Tipo { get; set; } = "Normal"
+        public string Tipo { get; set; } = "Normal";
 
         private DateTime UltimoPago = DateTime.MinValue;
         private string? UltimaLinea = null;
@@ -120,8 +121,7 @@ namespace Tarjeta.Clases
         }
         public Boleto PagarBoleto(Usuario usuario, Colectivo cole, DateTime fecha)
         {
-            decimal tarifa = cole.Tarifa;
-            bool esTrasbordo = false;
+            decimal tarifa = TARIFA_BASE;
 
             // 1. Franquicia
             if (Franquicia != null)
@@ -142,11 +142,10 @@ namespace Tarjeta.Clases
             if (PuedeTrasbordo(cole, fecha))
             {
                 tarifa = 0;
-                esTrasbordo = true;
             }
 
             // 4. Descontar
-            if (!PagarMonto(tarifa))
+            if (!DescontarSaldo(tarifa))
                 throw new Exception("Saldo insuficiente.");
 
             // 5. Registrar viaje
@@ -157,7 +156,7 @@ namespace Tarjeta.Clases
             UltimaLinea = cole.Linea;
 
             // 7. Crear boleto
-            Boleto boleto = new Boleto(usuario, cole, fecha, tarifa, esTrasbordo);
+            Boleto boleto = new Boleto(Tipo, cole.Linea, tarifa, Saldo, Numero);
             usuario.HistorialBoletos.Add(boleto);
 
             return boleto;
