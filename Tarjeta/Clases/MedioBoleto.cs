@@ -10,6 +10,7 @@ namespace Tarjeta.Clases
 
         public MedioBoleto(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial) 
         {
+            Tipo = "MedioBoleto";
             UltimoViaje = null;
             FechaInicioConteo = null;
             ViajesConDescuentoHoy = 0;
