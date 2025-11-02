@@ -16,7 +16,10 @@ namespace Tarjeta.Clases
 
         public IFranquicia? Franquicia { get; set; }
 
-        public Tarjeta(string numero, decimal saldoInicial = 0, string tipo = "Normal")
+        // Registro de boletos emitidos
+        protected List<Boleto> boletos = new List<Boleto>();
+
+        public Tarjeta(string numero, decimal saldoInicial = 0)
         {
             Numero = numero;
             Saldo = saldoInicial;
@@ -38,7 +41,6 @@ namespace Tarjeta.Clases
 
         public bool DescontarSaldo(decimal monto)
         {
-            // Permitir saldo negativo hasta el límite establecido
             if (Saldo - monto < LIMITE_NEGATIVO)
                 return false;
 
@@ -46,6 +48,27 @@ namespace Tarjeta.Clases
             return true;
         }
 
+        // Nuevo método principal: pagar boleto (considerando trasbordo)
+        public virtual Boleto? PagarBoleto(Colectivo colectivo, DateTime fechaHora)
+        {
+            bool esTrasbordo = EsTrasbordoValido(colectivo, fechaHora);
+
+            decimal monto = esTrasbordo ? 0 : colectivo.Precio;
+
+            if (!DescontarSaldo(monto))
+                return null; // No se pudo pagar (saldo insuficiente)
+
+            var boleto = new Boleto(
+                tipoTarjeta: Tipo,
+                linea: colectivo.Linea,
+                totalAbonado: monto,
+                saldoRestante: Saldo,
+                idTarjeta: Numero
+            );
+
+            boletos.Add(boleto);
+            return boleto;
+        }
         /// <summary>
         /// Aplica el pago del boleto considerando el tipo de franquicia y restricciones horarias.
         /// </summary>
@@ -91,6 +114,26 @@ namespace Tarjeta.Clases
             return true;
         }
 
+        // Determina si el viaje actual es trasbordo según las reglas
+        private bool EsTrasbordoValido(Colectivo nuevoColectivo, DateTime fechaHora)
+        {
+            var ultimo = boletos.LastOrDefault();
+            if (ultimo == null) return false;
+
+            // Condición 1: Dentro de una hora desde el último viaje
+            TimeSpan diferencia = fechaHora - ultimo.FechaHora;
+            bool dentroDeUnaHora = diferencia.TotalMinutes <= 60;
+
+            // Condición 2: Línea distinta
+            bool distintaLinea = nuevoColectivo.Linea != ultimo.Linea;
+
+            // Condición 3: Días y horarios válidos (lunes a sábado, 7 a 22)
+            bool diaHabil = fechaHora.DayOfWeek != DayOfWeek.Sunday;
+            bool dentroHorario = fechaHora.Hour >= 7 && fechaHora.Hour < 22;
+
+            return dentroDeUnaHora && distintaLinea && diaHabil && dentroHorario;
+        }
+
         private static bool EsFranquiciaConHorario(string tipo)
         {
             // Solo estas franquicias tienen restricción horaria
@@ -122,8 +165,6 @@ namespace Tarjeta.Clases
             if (Saldo + monto > LIMITE_SALDO)
             {
                 decimal espacioDisponible = LIMITE_SALDO - Saldo;
-
-                // Se acredita solo lo que entra
                 Saldo += espacioDisponible;
 
                 // Y el excedente queda como pendiente
@@ -131,7 +172,6 @@ namespace Tarjeta.Clases
             }
             else
             {
-                // Todo entra sin problemas
                 Saldo += monto;
             }
         }
