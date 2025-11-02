@@ -1,6 +1,6 @@
 namespace Tarjeta.Clases
 {
-   public class Tarjeta
+    public class Tarjeta
     {
         public string Numero { get; set; }
         public decimal Saldo { get; set; }
@@ -9,6 +9,9 @@ namespace Tarjeta.Clases
         private const decimal LIMITE_NEGATIVO = -1200;
 
         public string Tipo { get; set; }
+
+        // Registro de boletos emitidos
+        private List<Boleto> boletos = new List<Boleto>();
 
         public Tarjeta(string numero, decimal saldoInicial = 0)
         {
@@ -19,66 +22,78 @@ namespace Tarjeta.Clases
 
         public bool Recargar(decimal monto)
         {
-             decimal[] cargasAceptadas = [2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000];
-            
+            decimal[] cargasAceptadas = [2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000];
             if (!Array.Exists(cargasAceptadas, x => x == monto))
-                 return false;
+                return false;
 
             if (Saldo + monto > LIMITE_SALDO)
                 return false;
 
             Saldo += monto;
-                return true;
+            return true;
         }
 
         public bool DescontarSaldo(decimal monto)
         {
-            // Permitir saldo negativo hasta el límite establecido
             if (Saldo - monto < LIMITE_NEGATIVO)
-            {
                 return false;
-            }
 
             Saldo -= monto;
             return true;
         }
 
-        public virtual bool PagarBoleto(decimal monto)
+        // Nuevo método principal: pagar boleto (considerando trasbordo)
+        public virtual Boleto PagarBoleto(Colectivo colectivo, DateTime fechaHora)
         {
-            // Primero intentamos descontar el monto normalmente
-             if (!DescontarSaldo(monto))
-                return false;
+            bool esTrasbordo = EsTrasbordoValido(colectivo, fechaHora);
 
-            // Si había saldo pendiente, se acredita lo que entra hasta el límite
-            if (SaldoPendiente > 0 && Saldo < LIMITE_SALDO)
-                {
-                    decimal espacioDisponible = LIMITE_SALDO - Saldo;
-                    decimal acreditado = Math.Min(espacioDisponible, SaldoPendiente);
+            decimal monto = esTrasbordo ? 0 : colectivo.Precio;
 
-            // Se acredita un poco del pendiente
-            Saldo += acreditado;
-            SaldoPendiente -= acreditado;
+            if (!DescontarSaldo(monto))
+                return null; // No se pudo pagar (saldo insuficiente)
+
+            var boleto = new Boleto(
+                tipoTarjeta: Tipo,
+                linea: colectivo.Linea,
+                totalAbonado: monto,
+                saldoRestante: Saldo,
+                idTarjeta: Numero
+            );
+
+            boletos.Add(boleto);
+            return boleto;
         }
 
-            return true;
+        // Determina si el viaje actual es trasbordo según las reglas
+        private bool EsTrasbordoValido(Colectivo nuevoColectivo, DateTime fechaHora)
+        {
+            var ultimo = boletos.LastOrDefault();
+            if (ultimo == null) return false;
+
+            // Condición 1: Dentro de una hora desde el último viaje
+            TimeSpan diferencia = fechaHora - ultimo.FechaHora;
+            bool dentroDeUnaHora = diferencia.TotalMinutes <= 60;
+
+            // Condición 2: Línea distinta
+            bool distintaLinea = nuevoColectivo.Linea != ultimo.Linea;
+
+            // Condición 3: Días y horarios válidos (lunes a sábado, 7 a 22)
+            bool diaHabil = fechaHora.DayOfWeek != DayOfWeek.Sunday;
+            bool dentroHorario = fechaHora.Hour >= 7 && fechaHora.Hour < 22;
+
+            return dentroDeUnaHora && distintaLinea && diaHabil && dentroHorario;
         }
 
         public void AcreditarCarga(decimal monto)
         {
-            // Si al sumar el monto se supera el límite
             if (Saldo + monto > LIMITE_SALDO)
             {
                 decimal espacioDisponible = LIMITE_SALDO - Saldo;
-
-                // Se acredita solo lo que entra
                 Saldo += espacioDisponible;
-
-                 // Y el excedente queda como pendiente
                 SaldoPendiente += (monto - espacioDisponible);
             }
             else
             {
-                // Todo entra sin problemas
                 Saldo += monto;
             }
         }
