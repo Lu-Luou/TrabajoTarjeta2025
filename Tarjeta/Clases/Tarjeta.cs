@@ -45,6 +45,14 @@ namespace Tarjeta.Clases
         /// <summary>
         /// Aplica el pago del boleto considerando el tipo de franquicia y restricciones horarias.
         /// </summary>
+        public virtual bool PagarBoleto(decimal monto)
+        {
+            return PagarBoleto(monto, DateTime.Now);
+        }
+
+        /// <summary>
+        /// Aplica el pago del boleto considerando el tipo de franquicia y restricciones horarias.
+        /// </summary>
         public virtual bool PagarBoleto(decimal monto, DateTime fecha)
         {
             // Validar si aplica restricción horaria
@@ -99,9 +107,8 @@ namespace Tarjeta.Clases
         {
             return tipo switch
             {
-                "MedioBoleto" or "MedioBoletoUniversitario" => monto * 0.5m,
                 "BEG" or "FranquiciaCompleta" => 0m,
-                _ => monto // Normal
+                _ => monto // Normal and MedioBoleto handle their own discounts
             };
         }
 
