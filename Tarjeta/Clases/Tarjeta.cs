@@ -8,13 +8,17 @@ namespace Tarjeta.Clases
         private const decimal LIMITE_SALDO = 56000;
         private const decimal LIMITE_NEGATIVO = -1200;
 
-        public string Tipo { get; set; }
+        public string Tipo { get; set; } = "Normal"
+
+        private DateTime UltimoPago = DateTime.MinValue;
+        private string? UltimaLinea = null;
+
+        public IFranquicia? Franquicia { get; set; }
 
         public Tarjeta(string numero, decimal saldoInicial = 0)
         {
             Numero = numero;
             Saldo = saldoInicial;
-            Tipo = "Normal";
         }
 
         public bool Recargar(decimal monto)
@@ -82,6 +86,83 @@ namespace Tarjeta.Clases
                 Saldo += monto;
             }
         }
+
+        private decimal CalcularTarifaUsoFrecuente(Usuario usuario, decimal tarifa)
+        {
+            int viajes = usuario.ViajesEsteMes;
+
+            if (viajes < 30)
+                return tarifa;
+
+            if (viajes < 60)
+                return tarifa * 0.80m;
+
+            if (viajes < 80)
+                return tarifa * 0.75m;
+
+            return tarifa;
+        }
+         private bool PuedeTrasbordo(Colectivo cole, DateTime fecha)
+        {
+            if (UltimaLinea == null) return false;
+            if (UltimaLinea == cole.Linea) return false;
+
+            // domingo no aplica
+            if (fecha.DayOfWeek == DayOfWeek.Sunday) return false;
+
+            // horario 7 a 22
+            if (!(fecha.TimeOfDay >= new TimeSpan(7, 0, 0) &&
+                  fecha.TimeOfDay <= new TimeSpan(22, 0, 0)))
+                return false;
+
+            // dentro de una hora
+            return (fecha - UltimoPago).TotalMinutes <= 60;
+        }
+        public Boleto PagarBoleto(Usuario usuario, Colectivo cole, DateTime fecha)
+        {
+            decimal tarifa = cole.Tarifa;
+            bool esTrasbordo = false;
+
+            // 1. Franquicia
+            if (Franquicia != null)
+            {
+                if (!Franquicia.PuedeUsarse(fecha))
+                    throw new Exception("La franquicia no puede usarse en este horario.");
+
+                tarifa = Franquicia.CalcularTarifa(tarifa);
+            }
+            else
+            {
+                // 2. Uso frecuente (solo tarjeta normal)
+                if (Tipo == "Normal")
+                    tarifa = CalcularTarifaUsoFrecuente(usuario, tarifa);
+            }
+
+            // 3. Trasbordo
+            if (PuedeTrasbordo(cole, fecha))
+            {
+                tarifa = 0;
+                esTrasbordo = true;
+            }
+
+            // 4. Descontar
+            if (!PagarMonto(tarifa))
+                throw new Exception("Saldo insuficiente.");
+
+            // 5. Registrar viaje
+            usuario.RegistrarViaje(fecha);
+
+            // 6. Actualizar estado de trasbordo
+            UltimoPago = fecha;
+            UltimaLinea = cole.Linea;
+
+            // 7. Crear boleto
+            Boleto boleto = new Boleto(usuario, cole, fecha, tarifa, esTrasbordo);
+            usuario.HistorialBoletos.Add(boleto);
+
+            return boleto;
+        }
+
 
         public override string ToString()
         {
