@@ -56,7 +56,7 @@ namespace Tarjeta.Clases
 
         public override bool PagarBoleto(decimal monto)
         {
-            DateTime ahora = DateTime.Now;
+            DateTime ahora = Tiempo.Now();
 
             if (!PuedeUsarse(ahora))
             {

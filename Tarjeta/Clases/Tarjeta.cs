@@ -16,6 +16,9 @@ namespace Tarjeta.Clases
 
         public IFranquicia? Franquicia { get; set; }
 
+        // Sistema de tiempo (por defecto usa tiempo real)
+        public Tiempo Tiempo { get; set; } = new TiempoReal();
+
         // Registro de boletos emitidos
         protected List<Boleto> boletos = new List<Boleto>();
 
@@ -63,7 +66,9 @@ namespace Tarjeta.Clases
                 linea: colectivo.Linea,
                 totalAbonado: monto,
                 saldoRestante: Saldo,
-                idTarjeta: Numero
+                idTarjeta: Numero,
+                esTrasbordo: esTrasbordo,
+                fechaHora: fechaHora
             );
 
             boletos.Add(boleto);
@@ -74,7 +79,7 @@ namespace Tarjeta.Clases
         /// </summary>
         public virtual bool PagarBoleto(decimal monto)
         {
-            return PagarBoleto(monto, DateTime.Now);
+            return PagarBoleto(monto, Tiempo.Now());
         }
 
         /// <summary>

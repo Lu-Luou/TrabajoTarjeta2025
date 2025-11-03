@@ -18,9 +18,10 @@ namespace Tarjeta.Clases
             decimal totalAbonado,
             decimal saldoRestante,
             string idTarjeta,
-            bool esTrasbordo = false)
+            bool esTrasbordo = false,
+            DateTime? fechaHora = null)
         {
-            FechaHora = DateTime.Now;
+            FechaHora = fechaHora ?? DateTime.Now;
             TipoTarjeta = tipoTarjeta;
             Linea = linea;
             TotalAbonado = totalAbonado;
