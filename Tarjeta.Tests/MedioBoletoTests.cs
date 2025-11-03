@@ -178,34 +178,149 @@ namespace Tarjeta.Tests
             Assert.IsTrue(tercerViaje);
             Assert.AreEqual(6840, tarjeta.Saldo); // 8420 - 1580 (monto completo)
         }
+        */
 
         [Test]
-        public void PagarBoleto_MasDeDosViajesPorDia_NoPermiteDescuentoEnTercero()
+        public void PuedeUsarse_PrimerViaje_SiemprePermitido()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            bool puedeUsarse = tarjeta.PuedeUsarse(fecha);
+
+            // Assert
+            Assert.IsTrue(puedeUsarse);
+        }
+
+        [Test]
+        public void PuedeUsarse_ViajeInmediatoDespues_NoPermitido()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 8, 0, 0));
+            tarjeta.Tiempo = tiempoFalso;
+
+            // Primer viaje
+            tarjeta.PagarBoleto(700);
+
+            // Act - Intentar viajar inmediatamente
+            bool puedeUsarse = tarjeta.PuedeUsarse(tiempoFalso.Now());
+
+            // Assert
+            Assert.IsFalse(puedeUsarse);
+        }
+
+        [Test]
+        public void PuedeUsarse_ViajeDespuesDe5Minutos_Permitido()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 8, 0, 0));
+            tarjeta.Tiempo = tiempoFalso;
+
+            // Primer viaje
+            tarjeta.PagarBoleto(700);
+
+            // Avanzar 5 minutos
+            tiempoFalso.AgregarMinutos(5);
+
+            // Act
+            bool puedeUsarse = tarjeta.PuedeUsarse(tiempoFalso.Now());
+
+            // Assert
+            Assert.IsTrue(puedeUsarse);
+        }
+
+        [Test]
+        public void CalcularTarifa_PrimerosDosViajes_MitadPrecio()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            decimal tarifaCompleta = 700;
+
+            // Act
+            decimal tarifaCalculada1 = tarjeta.CalcularTarifa(tarifaCompleta);
+            tarjeta.PagarBoleto(tarifaCompleta); // Primer viaje
+            decimal tarifaCalculada2 = tarjeta.CalcularTarifa(tarifaCompleta);
+
+            // Assert
+            Assert.AreEqual(350, tarifaCalculada1); // 700 / 2
+            Assert.AreEqual(350, tarifaCalculada2); // 700 / 2
+        }
+
+        [Test]
+        public void CalcularTarifa_TercerViaje_PrecioCompleto()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            decimal tarifaCompleta = 700;
+
+            // Act
+            tarjeta.PagarBoleto(tarifaCompleta); // Primer viaje
+            tarjeta.PagarBoleto(tarifaCompleta); // Segundo viaje
+            decimal tarifaCalculada3 = tarjeta.CalcularTarifa(tarifaCompleta);
+
+            // Assert
+            Assert.AreEqual(700, tarifaCalculada3); // Precio completo
+        }
+
+        [Test]
+        public void PagarBoleto_ConTiempoFalso_ControlaTiempoPrecisamente()
+        {
+            // Arrange
+            var tarjeta = new MedioBoleto("123", 2000);
+            var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 8, 0, 0));
+            tarjeta.Tiempo = tiempoFalso;
+            decimal tarifa = 700;
+
+            // Act - Primer viaje
+            bool resultado1 = tarjeta.PagarBoleto(tarifa);
+            Assert.IsTrue(resultado1);
+            Assert.AreEqual(1650, tarjeta.Saldo); // 2000 - 350
+
+            // Intentar segundo viaje inmediatamente (debería fallar)
+            bool resultado2 = tarjeta.PagarBoleto(tarifa);
+            Assert.IsFalse(resultado2);
+            Assert.AreEqual(1650, tarjeta.Saldo); // Saldo no cambia
+
+            // Avanzar exactamente 5 minutos
+            tiempoFalso.AgregarMinutos(5);
+
+            // Segundo viaje (debería funcionar)
+            bool resultado3 = tarjeta.PagarBoleto(tarifa);
+            Assert.IsTrue(resultado3);
+            Assert.AreEqual(1300, tarjeta.Saldo); // 1650 - 350
+        }
+
+        [Test]
+        public void PagarBoleto_NuevoDia_ReseteaContadorViajesConDescuento()
         {
             // Arrange
             var tarjeta = new MedioBoleto("123", 10000);
-            decimal monto = 1580;
-            decimal saldoEsperadoDespuesDos = 10000 - 790 - 790; // Dos viajes con descuento
-            decimal saldoEsperadoDespuesTres = saldoEsperadoDespuesDos - 1580; // Tercer viaje sin descuento
+            var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 8, 0, 0)); // Lunes
+            tarjeta.Tiempo = tiempoFalso;
+            decimal tarifa = 700;
 
-            // Act & Assert - Primer viaje
-            System.Threading.Thread.Sleep(100);
-            Assert.IsTrue(tarjeta.PagarBoleto(monto));
-            
-            // Esperar 5 minutos
-            System.Threading.Thread.Sleep(5 * 60 * 1000 + 100);
+            // Act - Dos viajes el lunes
+            tarjeta.PagarBoleto(tarifa);
+            tiempoFalso.AgregarMinutos(5);
+            tarjeta.PagarBoleto(tarifa);
 
-            // Act & Assert - Segundo viaje
-            Assert.IsTrue(tarjeta.PagarBoleto(monto));
-            Assert.AreEqual(saldoEsperadoDespuesDos, tarjeta.Saldo);
+            // Verificar que el tercer viaje del mismo día cobra completo
+            tiempoFalso.AgregarMinutos(5);
+            tarjeta.PagarBoleto(tarifa); // Tercer viaje lunes - precio completo
 
-            // Esperar 5 minutos
-            System.Threading.Thread.Sleep(5 * 60 * 1000 + 100);
+            // Cambiar al día siguiente
+            tiempoFalso.EstablecerFecha(new DateTime(2024, 10, 15, 8, 0, 0)); // Martes
 
-            // Act & Assert - Tercer viaje (debe cobrar monto completo)
-            Assert.IsTrue(tarjeta.PagarBoleto(monto));
-            Assert.AreEqual(saldoEsperadoDespuesTres, tarjeta.Saldo);
+            // Act - Primer viaje del martes debería tener descuento nuevamente
+            tiempoFalso.AgregarMinutos(5); // Para evitar restricción de 5 minutos
+            tarjeta.PagarBoleto(tarifa); // Primer viaje martes - mitad precio
+
+            // Assert - Verificar que el contador se reseteó
+            Assert.AreEqual(1, tarjeta.ViajesConDescuentoHoy);
         }
-        */
     }
 }

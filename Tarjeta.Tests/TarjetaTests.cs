@@ -209,5 +209,158 @@ namespace Tarjeta.Tests
             Assert.IsTrue(result);
             Assert.AreEqual(0, tarjeta.Saldo);
         }
+
+        [Test]
+        public void PagarBoleto_ConColectivo_SaldoSuficiente_CreaBoletoCorrecto()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 2000);
+            var colectivo = new Colectivo("102", "Empresa A");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            var boleto = tarjeta.PagarBoleto(colectivo, fecha);
+
+            // Assert
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual("Normal", boleto.TipoTarjeta);
+            Assert.AreEqual("102", boleto.Linea);
+            Assert.AreEqual(700, boleto.TotalAbonado); // Tarifa urbana
+            Assert.AreEqual(1300, boleto.SaldoRestante);
+            Assert.AreEqual("123", boleto.IDTarjeta);
+        }
+
+        [Test]
+        public void PagarBoleto_ConColectivo_SaldoInsuficiente_RetornaNull()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 100); // Menos que la tarifa
+            var colectivo = new Colectivo("102", "Empresa A");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            var boleto = tarjeta.PagarBoleto(colectivo, fecha);
+
+            // Assert
+            Assert.IsNull(boleto);
+            Assert.AreEqual(100, tarjeta.Saldo); // Saldo no cambia
+        }
+
+        [Test]
+        public void PagarBoleto_ConColectivoInterurbano_CobraTarifaCorrecta()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 5000);
+            var colectivo = new Colectivo("102", "Empresa A", true); // Interurbano
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            var boleto = tarjeta.PagarBoleto(colectivo, fecha);
+
+            // Assert
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual(3000, boleto.TotalAbonado); // Tarifa interurbana
+            Assert.AreEqual(2000, boleto.SaldoRestante);
+        }
+
+        [Test]
+        public void PagarBoleto_ConUsuarioYColeYFecha_CreaBoletoCorrecto()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 2000);
+            var usuario = new Usuario("Juan", tarjeta);
+            var colectivo = new Colectivo("102", "Empresa A");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            var boleto = tarjeta.PagarBoleto(usuario, colectivo, fecha);
+
+            // Assert
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual("Normal", boleto.TipoTarjeta);
+            Assert.AreEqual("102", boleto.Linea);
+            Assert.AreEqual(700, boleto.TotalAbonado);
+            Assert.AreEqual(1300, boleto.SaldoRestante);
+            Assert.AreEqual("123", boleto.IDTarjeta);
+            Assert.AreEqual(fecha, boleto.FechaHora);
+        }
+
+        [Test]
+        public void AcreditarCarga_SaldoPendienteMayorQueEspacioDisponible_AcreditaSoloEspacioDisponible()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 55000); // Límite es 56000
+            tarjeta.SaldoPendiente = 2000;
+
+            // Act
+            tarjeta.AcreditarCarga(1500);
+
+            // Assert
+            Assert.AreEqual(56000, tarjeta.Saldo); // Límite alcanzado
+            Assert.AreEqual(500, tarjeta.SaldoPendiente); // 2000 - 1500 = 500 pendiente
+        }
+
+        [Test]
+        public void AcreditarCarga_SaldoPendienteMenorOIgualQueEspacioDisponible_AcreditaTodoPendiente()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123", 55000);
+            tarjeta.SaldoPendiente = 500;
+
+            // Act
+            tarjeta.AcreditarCarga(1000);
+
+            // Assert
+            Assert.AreEqual(55500, tarjeta.Saldo); // 55000 + 500
+            Assert.AreEqual(0, tarjeta.SaldoPendiente);
+        }
+
+        [Test]
+        public void Tiempo_PorDefecto_EsTiempoReal()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123");
+
+            // Assert
+            Assert.IsInstanceOf<TiempoReal>(tarjeta.Tiempo);
+        }
+
+        [Test]
+        public void Tiempo_PuedeSerConfigurado()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123");
+            var tiempoFalso = new TiempoFalso();
+
+            // Act
+            tarjeta.Tiempo = tiempoFalso;
+
+            // Assert
+            Assert.AreSame(tiempoFalso, tarjeta.Tiempo);
+        }
+
+        [Test]
+        public void Franquicia_PorDefecto_EsNull()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123");
+
+            // Assert
+            Assert.IsNull(tarjeta.Franquicia);
+        }
+
+        [Test]
+        public void Franquicia_PuedeSerAsignada()
+        {
+            // Arrange
+            var tarjeta = new TarjetaClase("123");
+            var franquicia = new FranquiciaCompleta("123");
+
+            // Act
+            tarjeta.Franquicia = franquicia;
+
+            // Assert
+            Assert.AreSame(franquicia, tarjeta.Franquicia);
+        }
     }
 }

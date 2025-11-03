@@ -57,16 +57,86 @@ namespace Tarjeta.Tests
         {
             // Arrange
             var tarjeta = new FranquiciaCompleta("123", 2000);
-            var colectivo = new Colectivo("Linea 1");
-            decimal monto = 1580;
+            var colectivo = new Colectivo("102", "Empresa A");
+            decimal monto = 700;
 
             // Act
-            var boleto = colectivo.PagarCon(tarjeta, monto);
+            var boleto = colectivo.PagarCon(tarjeta);
 
             // Assert
             Assert.IsNotNull(boleto);
-            Assert.AreEqual(1580, boleto.Monto); // Monto completo
-            Assert.AreEqual(420, tarjeta.Saldo);
+            Assert.AreEqual(700, boleto.TotalAbonado); // Monto completo
+            Assert.AreEqual(1300, tarjeta.Saldo);
+        }
+
+        [Test]
+        public void PuedeUsarse_SiempreRetornaTrue()
+        {
+            // Arrange
+            var tarjeta = new FranquiciaCompleta("123", 2000);
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0); // Lunes mañana
+            var fechaFinDeSemana = new DateTime(2024, 10, 19, 22, 0, 0); // Sábado noche
+
+            // Act
+            bool puedeUsarseDiaSemana = tarjeta.PuedeUsarse(fecha);
+            bool puedeUsarseFinSemana = tarjeta.PuedeUsarse(fechaFinDeSemana);
+
+            // Assert
+            Assert.IsTrue(puedeUsarseDiaSemana);
+            Assert.IsTrue(puedeUsarseFinSemana);
+        }
+
+        [Test]
+        public void CalcularTarifa_SiempreRetornaTarifaCompleta()
+        {
+            // Arrange
+            var tarjeta = new FranquiciaCompleta("123", 2000);
+            decimal tarifaBase = 700;
+
+            // Act
+            decimal tarifaCalculada = tarjeta.CalcularTarifa(tarifaBase);
+
+            // Assert
+            Assert.AreEqual(700, tarifaCalculada); // No hay descuento
+        }
+
+        [Test]
+        public void Tipo_SeteaCorrectamente()
+        {
+            // Arrange
+            var tarjeta = new FranquiciaCompleta("123", 2000);
+
+            // Assert
+            Assert.AreEqual("FranquiciaCompleta", tarjeta.Tipo);
+        }
+
+        [Test]
+        public void Franquicia_AsignadaCorrectamente()
+        {
+            // Arrange
+            var tarjeta = new FranquiciaCompleta("123", 2000);
+
+            // Assert
+            Assert.IsNotNull(tarjeta.Franquicia);
+            Assert.IsInstanceOf<FranquiciaCompleta>(tarjeta.Franquicia);
+        }
+
+        [Test]
+        public void PagarBoleto_UsaFranquicia_ConColectivo()
+        {
+            // Arrange
+            var tarjeta = new FranquiciaCompleta("123", 2000);
+            var colectivo = new Colectivo("102", "Empresa A");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0);
+
+            // Act
+            var boleto = tarjeta.PagarBoleto(colectivo, fecha);
+
+            // Assert
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual("FranquiciaCompleta", boleto.TipoTarjeta);
+            Assert.AreEqual(700, boleto.TotalAbonado); // Tarifa completa
+            Assert.AreEqual(1300, boleto.SaldoRestante);
         }
     }
 }
