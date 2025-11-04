@@ -139,7 +139,7 @@ namespace Tarjeta.Tests
         {
             // Program is internal in the Tarjeta assembly; call Main via reflection to ensure it doesn't throw
             var asm = typeof(Tarjeta.Clases.Tarjeta).Assembly;
-            var progType = asm.GetType("Tarjeta.Program", throwOnError: false);
+            var progType = asm.GetType("Tarjeta.Clases.Program", throwOnError: false);
             Assert.IsNotNull(progType, "Program type should exist");
             var main = progType.GetMethod("Main", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
             Assert.IsNotNull(main, "Main method should exist");
