@@ -30,12 +30,12 @@ jobs:
         run: |
           dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
-      - name: Debug: list coverage results directory
+      - name: "Debug: list coverage results directory"
         run: |
           echo "-- Listing coverage directory --"
           powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
 
-      - name: Debug: show first lines of any coverage.cobertura.xml files
+      - name: "Debug: show first lines of any coverage.cobertura.xml files"
         run: |
           echo "-- Searching for coverage.cobertura.xml --"
           powershell -Command "Get-ChildItem -Path './coverage' -Recurse -Filter 'coverage.cobertura.xml' -ErrorAction SilentlyContinue | ForEach-Object { Write-Host 'FOUND:' $_.FullName; Get-Content -Path $_.FullName -TotalCount 120 }"
@@ -60,7 +60,7 @@ jobs:
             reportgenerator -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
           }
 
-      - name: Debug: list final coverage artifacts
+      - name: "Debug: list final coverage artifacts"
         run: |
           echo "-- Final coverage directory listing --"
           powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
