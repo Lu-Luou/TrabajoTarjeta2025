@@ -1,6 +1,5 @@
 name: .NET CI/CD with Code Coverage
 
-
 on:
   push:
     branches:
@@ -10,71 +9,68 @@ on:
       - '**'
 
 jobs:
-
   build-and-test:
-
     runs-on: windows-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-   
-    - name: Setup .NET 8.0
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore
+      - name: Build
+        run: dotnet build --no-restore
 
-    - name: Run tests with coverage
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+      - name: Run tests with coverage
+        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
-    - name: Debug: list coverage results directory
-      run: |
-        echo "-- Listing coverage directory --"
-        powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
-    - name: Debug: show first lines of any coverage.cobertura.xml files
-      run: |
-        echo "-- Searching for coverage.cobertura.xml --"
-        powershell -Command "Get-ChildItem -Path './coverage' -Recurse -Filter 'coverage.cobertura.xml' -ErrorAction SilentlyContinue | ForEach-Object { Write-Host 'FOUND:' $_.FullName; Get-Content -Path $_.FullName -TotalCount 120 }"
+      - name: Debug: list coverage results directory
+        run: |
+          echo "-- Listing coverage directory --"
+          powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
 
-    - name: Install ReportGenerator tool
-      run: |
-        echo "-- Installing ReportGenerator --"
-        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.23
+      - name: Debug: show first lines of any coverage.cobertura.xml files
+        run: |
+          echo "-- Searching for coverage.cobertura.xml --"
+          powershell -Command "Get-ChildItem -Path './coverage' -Recurse -Filter 'coverage.cobertura.xml' -ErrorAction SilentlyContinue | ForEach-Object { Write-Host 'FOUND:' $_.FullName; Get-Content -Path $_.FullName -TotalCount 120 }"
 
-    - name: Generate unified Cobertura report
-      run: |
-        echo "-- Running ReportGenerator to merge/emit Cobertura --"
-        # ReportGenerator accepts a list of reports; include any cobertura files or coverage files found
-        $reports = Get-ChildItem -Path './coverage' -Recurse -Include '*.xml','*.opencover','coverage.cobertura.xml' -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-        if (-not $reports) { Write-Host 'No XML reports found to feed ReportGenerator' ; exit 0 }
-        $reportsArg = $reports -join ';'
-        $reportGeneratorExe = Join-Path $env:USERPROFILE ".dotnet\tools\reportgenerator.exe"
-        if (Test-Path $reportGeneratorExe) {
-          & $reportGeneratorExe -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
-        } else {
-          # fallback: call reportgenerator assuming it's on PATH
-          reportgenerator -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
-        }
+      - name: Install ReportGenerator tool
+        run: |
+          echo "-- Installing ReportGenerator --"
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.23
 
-    - name: Debug: list final coverage artifacts
-      run: |
-        echo "-- Final coverage directory listing --"
-        powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
+      - name: Generate unified Cobertura report
+        run: |
+          echo "-- Running ReportGenerator to merge/emit Cobertura --"
+          # ReportGenerator accepts a list of reports; include any cobertura files or coverage files found
+          $reports = Get-ChildItem -Path './coverage' -Recurse -Include '*.xml','*.opencover','coverage.cobertura.xml' -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+          if (-not $reports) { Write-Host 'No XML reports found to feed ReportGenerator' ; exit 0 }
+          $reportsArg = $reports -join ';'
+          $reportGeneratorExe = Join-Path $env:USERPROFILE ".dotnet\tools\reportgenerator.exe"
+          if (Test-Path $reportGeneratorExe) {
+            & $reportGeneratorExe -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
+          } else {
+            # fallback: call reportgenerator assuming it's on PATH
+            reportgenerator -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
+          }
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: |
-          ./coverage/**/coverage.cobertura.xml
-          ./coverage/report/Cobertura.xml
-          ./coverage/report/coverage.cobertura.xml
-        fail_ci_if_error: true
-        verbose: true
+      - name: Debug: list final coverage artifacts
+        run: |
+          echo "-- Final coverage directory listing --"
+          powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: |
+            ./coverage/**/coverage.cobertura.xml
+            ./coverage/report/Cobertura.xml
+            ./coverage/report/coverage.cobertura.xml
+          fail_ci_if_error: true
+          verbose: true
