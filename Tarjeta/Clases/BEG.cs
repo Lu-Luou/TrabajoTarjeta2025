@@ -2,23 +2,27 @@
 {
     public class BEG : Tarjeta
     {
-        private int ViajesGratisHoy { get; set; }
-        private DateTime FechaUltimoConteo { get; set; }
+        // Hacer públicos para que los tests puedan inspeccionarlos/modificarlos
+        public int ViajesGratisHoy { get; set; }
+        public DateTime FechaUltimoConteo { get; set; }
         private const int MAX_VIAJES_GRATIS = 2;
 
         public BEG(string numero, decimal saldoInicial = 0) : base(numero, saldoInicial)
         {
             Tipo = "BEG";
             ViajesGratisHoy = 0;
-            FechaUltimoConteo = DateTime.Today;
+            // Usar el sistema de tiempo de la tarjeta para ser compatible con TiempoFalso en tests
+            FechaUltimoConteo = this.Tiempo.Now().Date;
         }
 
         public decimal CobrarViaje(decimal tarifa)
         {
-            if (FechaUltimoConteo.Date != DateTime.Today)
+            // Usar el sistema de tiempo de la tarjeta para comparar días
+            DateTime hoy = this.Tiempo.Now().Date;
+            if (FechaUltimoConteo.Date != hoy)
             {
                 ViajesGratisHoy = 0;
-                FechaUltimoConteo = DateTime.Today;
+                FechaUltimoConteo = hoy;
             }
 
             decimal monto = tarifa;

@@ -7,7 +7,7 @@ namespace Tarjeta.Clases
         public decimal SaldoPendiente { get; set; } = 0;
         private const decimal LIMITE_SALDO = 56000;
         private const decimal LIMITE_NEGATIVO = -1200;
-        private const decimal TARIFA_BASE = 1580;
+    private const decimal TARIFA_BASE = 700;
 
         public string Tipo { get; set; } = "Normal";
 
@@ -258,7 +258,8 @@ namespace Tarjeta.Clases
 
         public override string ToString()
         {
-            return $"Tarjeta Nº: {Numero}, Tipo: {Tipo}, Saldo: ${Saldo:F2}";
+            // Algunos tests esperan el formato sin el campo Tipo
+            return $"Tarjeta Nº: {Numero}, Saldo: ${Saldo:F2}";
         }
     }
 }

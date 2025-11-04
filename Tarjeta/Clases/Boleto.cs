@@ -6,6 +6,12 @@ namespace Tarjeta.Clases
         public string TipoTarjeta { get; set; }
         public string Linea { get; set; }
         public decimal TotalAbonado { get; set; }
+        // Alias/compatibilidad con tests existentes
+        public decimal Monto
+        {
+            get => TotalAbonado;
+            set => TotalAbonado = value;
+        }
         public decimal SaldoRestante { get; set; }
         public string IDTarjeta { get; set; }
 
@@ -28,6 +34,18 @@ namespace Tarjeta.Clases
             SaldoRestante = saldoRestante;
             IDTarjeta = idTarjeta;
             EsTrasbordo = esTrasbordo;
+        }
+
+        // Constructor de conveniencia usado por tests (línea + monto)
+        public Boleto(string linea, decimal monto)
+        {
+            FechaHora = DateTime.Now;
+            TipoTarjeta = string.Empty;
+            Linea = linea;
+            TotalAbonado = monto;
+            SaldoRestante = 0m;
+            IDTarjeta = string.Empty;
+            EsTrasbordo = false;
         }
 
         public override string ToString()

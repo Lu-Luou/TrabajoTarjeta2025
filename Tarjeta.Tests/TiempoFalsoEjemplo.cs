@@ -1,11 +1,12 @@
 using Tarjeta.Clases;
+using NUnit.Framework;
 
 namespace Tarjeta.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class TiempoFalsoEjemplo
     {
-        [TestMethod]
+        [Test]
         public void Ejemplo_UsoTiempoFalso_PruebaBasica()
         {
             // Arrange: Crear tarjeta y configurar tiempo falso
@@ -21,7 +22,7 @@ namespace Tarjeta.Tests
             Assert.AreEqual(new DateTime(2024, 10, 14, 8, 0, 0), tiempoFalso.Now());
         }
 
-        [TestMethod]
+    [Test]
         public void Ejemplo_TiempoFalso_AvanzarMinutos()
         {
             // Arrange
@@ -48,7 +49,7 @@ namespace Tarjeta.Tests
             Assert.IsNotNull(boleto3);
         }
 
-        [TestMethod]
+    [Test]
         public void Ejemplo_TiempoFalso_AvanzarDias()
         {
             // Arrange
@@ -63,7 +64,7 @@ namespace Tarjeta.Tests
             Assert.AreEqual(new DateTime(2024, 10, 15), tiempoFalso.Now()); // Martes
         }
 
-        [TestMethod]
+    [Test]
         public void Ejemplo_TiempoFalso_EstablecerFechaEspecifica()
         {
             // Arrange
@@ -78,7 +79,7 @@ namespace Tarjeta.Tests
             Assert.AreEqual(new DateTime(2025, 1, 15, 14, 30, 0), tiempoFalso.Now());
         }
 
-        [TestMethod]
+    [Test]
         public void Ejemplo_TiempoReal_vs_TiempoFalso()
         {
             // Con tiempo real (predeterminado)

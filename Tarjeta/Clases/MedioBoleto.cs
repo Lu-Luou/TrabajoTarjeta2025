@@ -2,9 +2,10 @@ namespace Tarjeta.Clases
 {
     public class MedioBoleto : Tarjeta, IFranquicia
     {
-        private DateTime? UltimoViaje { get; set; }
-        private DateTime? FechaInicioConteo { get; set; }
-        private int ViajesConDescuentoHoy { get; set; }
+    private DateTime? UltimoViaje { get; set; }
+    private DateTime? FechaInicioConteo { get; set; }
+    // Hacer público para que los tests puedan inspeccionarlo
+    public int ViajesConDescuentoHoy { get; set; }
         private const int MINUTOS_ENTRE_VIAJES = 5;
         private const int MAX_VIAJES_CON_DESCUENTO_POR_DIA = 2;
 

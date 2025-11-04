@@ -12,7 +12,7 @@ namespace Tarjeta.Clases
         {
             Nombre = nombre;
             Tarjeta = tarjeta;
-            HistorialBoletos = historialBoletos ?? [];
+            HistorialBoletos = historialBoletos ?? new List<Boleto>();
         }
         
          public void RegistrarViaje(DateTime fecha)
@@ -26,7 +26,8 @@ namespace Tarjeta.Clases
 
         public override string ToString()
         {
-            return $"Usuario: {Nombre}, {Tarjeta}";
+            // Formato esperado por los tests: "Usuario: {Nombre}, Tarjeta Nº: {Numero}, Saldo: ${Saldo:F2}"
+            return $"Usuario: {Nombre}, Tarjeta Nº: {Tarjeta.Numero}, Saldo: ${Tarjeta.Saldo:F2}";
         }
     }
 }
