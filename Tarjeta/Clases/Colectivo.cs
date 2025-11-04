@@ -36,10 +36,14 @@ namespace Tarjeta.Clases
             if (tarjeta is BEG beg)
             {
                 decimal cobrado = beg.CobrarViaje(precioActual);
+                if (cobrado < 0) // fallo al intentar descontar (por límite)
+                    return null;
+
                 var boletoBeg = new Boleto(Linea, cobrado)
                 {
                     SaldoRestante = tarjeta.Saldo,
                     TipoTarjeta = tarjeta.Tipo,
+                    IDTarjeta = tarjeta.Numero,
                 };
                 return boletoBeg;
             }
@@ -56,9 +60,14 @@ namespace Tarjeta.Clases
                 {
                     SaldoRestante = tarjeta.Saldo,
                     TipoTarjeta = tarjeta.Tipo,
+                    IDTarjeta = tarjeta.Numero,
                 };
                 return boleto;
             }
+
+            // Para tarjeta normal: si no tiene suficiente saldo (no permitir saldo negativo aquí), devolver null
+            if (tarjeta.GetType() == typeof(Tarjeta) && tarjeta.Saldo < precioActual)
+                return null;
 
             // Tarjeta normal o franquicia completa: pagar con el precio actual
             bool resultado = tarjeta.PagarBoleto(precioActual);
@@ -68,6 +77,7 @@ namespace Tarjeta.Clases
             {
                 SaldoRestante = tarjeta.Saldo,
                 TipoTarjeta = tarjeta.Tipo,
+                IDTarjeta = tarjeta.Numero,
             };
             return boletoNormal;
         }

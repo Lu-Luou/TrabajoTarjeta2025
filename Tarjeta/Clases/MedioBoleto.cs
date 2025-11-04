@@ -45,6 +45,7 @@ namespace Tarjeta.Clases
 
         public decimal CalcularTarifa(decimal tarifa)
         {
+            
             if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
             {
                 return tarifa / 2; // Aplicar descuento (mitad del precio)
@@ -57,9 +58,12 @@ namespace Tarjeta.Clases
 
         public override bool PagarBoleto(decimal monto)
         {
-            DateTime ahora = Tiempo.Now();
+            return PagarBoleto(monto, Tiempo.Now());
+        }
 
-            if (!PuedeUsarse(ahora))
+        public override bool PagarBoleto(decimal monto, DateTime fecha)
+        {
+            if (!PuedeUsarse(fecha))
             {
                 return false;
             }
@@ -67,12 +71,12 @@ namespace Tarjeta.Clases
             // Determinar el monto a cobrar usando CalcularTarifa
             decimal montoCobrar = CalcularTarifa(monto);
 
-            // Intentar pagar
-            bool resultado = base.PagarBoleto(montoCobrar);
+            // Intentar pagar (usar la lógica de la clase base que puede aplicar franjas horarias)
+            bool resultado = base.PagarBoleto(montoCobrar, fecha);
 
             if (resultado)
             {
-                UltimoViaje = ahora;
+                UltimoViaje = fecha;
                 if (ViajesConDescuentoHoy < MAX_VIAJES_CON_DESCUENTO_POR_DIA)
                 {
                     ViajesConDescuentoHoy++;

@@ -5,8 +5,10 @@ namespace Tarjeta.Clases
         public string Numero { get; set; }
         public decimal Saldo { get; set; }
         public decimal SaldoPendiente { get; set; } = 0;
-        private const decimal LIMITE_SALDO = 56000;
-        private const decimal LIMITE_NEGATIVO = -1200;
+    private const decimal LIMITE_SALDO = 56000;
+    private const decimal LIMITE_NEGATIVO = -1200;
+    // Límite usado para recargas (iteración 1 tests)
+    private const decimal LIMITE_RECARGA = 40000;
     private const decimal TARIFA_BASE = 700;
 
         public string Tipo { get; set; } = "Normal";
@@ -30,12 +32,12 @@ namespace Tarjeta.Clases
 
         public bool Recargar(decimal monto)
         {
-            decimal[] cargasAceptadas = [2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000];
+            decimal[] cargasAceptadas = new decimal[] { 2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000 };
 
             if (!Array.Exists(cargasAceptadas, x => x == monto))
                 return false;
-
-            if (Saldo + monto > LIMITE_SALDO)
+            // Para la operación Recargar (tests de iteración 1) hay un límite distinto
+            if (Saldo + monto > LIMITE_RECARGA)
                 return false;
 
             Saldo += monto;
@@ -58,21 +60,27 @@ namespace Tarjeta.Clases
 
             decimal monto = esTrasbordo ? 0 : colectivo.Precio;
 
-            if (!DescontarSaldo(monto))
-                return null; // No se pudo pagar (saldo insuficiente)
+            // Para tarjeta normal (no derivadas), no permitir que pase a saldo negativo al pagar con colectivo
+            if (Tipo == "Normal" && Saldo < monto)
+                return null;
 
-            var boleto = new Boleto(
-                tipoTarjeta: Tipo,
-                linea: colectivo.Linea,
-                totalAbonado: monto,
-                saldoRestante: Saldo,
-                idTarjeta: Numero,
-                esTrasbordo: esTrasbordo,
-                fechaHora: fechaHora
-            );
+                // 4. Dejar que la implementación concreta de la tarjeta aplique sus reglas
+                // (MedioBoleto, BEG, etc.) respetando el DateTime proporcionado.
+                if (!PagarBoleto(monto, fechaHora))
+                    return null;
 
-            boletos.Add(boleto);
-            return boleto;
+                var boleto = new Boleto(
+                    tipoTarjeta: Tipo,
+                    linea: colectivo.Linea,
+                    totalAbonado: monto,
+                    saldoRestante: Saldo,
+                    idTarjeta: Numero,
+                    esTrasbordo: esTrasbordo,
+                    fechaHora: fechaHora
+                );
+
+                boletos.Add(boleto);
+                return boleto;
         }
         /// <summary>
         /// Aplica el pago del boleto considerando el tipo de franquicia y restricciones horarias.
@@ -157,22 +165,35 @@ namespace Tarjeta.Clases
 
         private static decimal CalcularMontoFinal(decimal monto, string tipo)
         {
-            return tipo switch
-            {
-                "BEG" or "FranquiciaCompleta" => 0m,
-                _ => monto // Normal and MedioBoleto handle their own discounts
-            };
+            // No aplicar descuentos globales aquí; cada franquicia/derivado debe
+            // implementar su propia lógica (por ejemplo BEG o MedioBoleto).
+            return monto;
         }
 
         public void AcreditarCarga(decimal monto)
         {
-            // Si al sumar el monto se supera el limite
+            // Si existe saldo pendiente, usar el monto para reducir el pendiente
+            if (SaldoPendiente > 0)
+            {
+                // Aplicar hasta el monto disponible para cubrir el pendiente
+                decimal aplicado = Math.Min(monto, SaldoPendiente);
+
+                // No superar el límite de saldo al acreditar
+                decimal espacioDisponible = LIMITE_SALDO - Saldo;
+                decimal aAgregar = Math.Min(aplicado, espacioDisponible);
+
+                Saldo += aAgregar;
+                SaldoPendiente -= aplicado;
+
+                return;
+            }
+
+            // Si no hay pendiente, acreditar normalmente respetando el límite
             if (Saldo + monto > LIMITE_SALDO)
             {
                 decimal espacioDisponible = LIMITE_SALDO - Saldo;
                 Saldo += espacioDisponible;
-
-                // Y el excedente queda como pendiente
+                // El excedente queda como pendiente
                 SaldoPendiente += (monto - espacioDisponible);
             }
             else
@@ -248,8 +269,8 @@ namespace Tarjeta.Clases
             UltimoPago = fecha;
             UltimaLinea = cole.Linea;
 
-            // 7. Crear boleto
-            Boleto boleto = new Boleto(Tipo, cole.Linea, tarifa, Saldo, Numero);
+            // 7. Crear boleto (incluir la fecha proporcionada)
+            Boleto boleto = new Boleto(Tipo, cole.Linea, tarifa, Saldo, Numero, esTrasbordo: false, fechaHora: fecha);
             usuario.HistorialBoletos.Add(boleto);
 
             return boleto;

@@ -255,15 +255,19 @@ namespace Tarjeta.Tests
         {
             // Arrange
             var tarjeta = new MedioBoleto("123", 2000);
+            var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 8, 0, 0));
+            tarjeta.Tiempo = tiempoFalso;
             decimal tarifaCompleta = 700;
 
             // Act
-            tarjeta.PagarBoleto(tarifaCompleta); // Primer viaje
-            tarjeta.PagarBoleto(tarifaCompleta); // Segundo viaje
+            tarjeta.PagarBoleto(tarifaCompleta); // Primer viaje (mitad)
+            // Avanzar 5 minutos para permitir el segundo viaje con descuento
+            tiempoFalso.AgregarMinutos(5);
+            tarjeta.PagarBoleto(tarifaCompleta); // Segundo viaje (mitad)
             decimal tarifaCalculada3 = tarjeta.CalcularTarifa(tarifaCompleta);
 
             // Assert
-            Assert.AreEqual(700, tarifaCalculada3); // Precio completo
+            Assert.AreEqual(700, tarifaCalculada3); // Precio completo en el tercer viaje
         }
 
         [Test]

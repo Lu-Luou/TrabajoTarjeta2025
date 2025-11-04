@@ -33,10 +33,25 @@
             }
             else
             {
-                Saldo -= monto;
+                // Usar DescontarSaldo para respetar el límite negativo
+                bool pudo = DescontarSaldo(monto);
+                if (!pudo)
+                {
+                    // Indicar fallo mediante un valor especial
+                    return -1m;
+                }
             }
 
             return monto;
+        }
+
+        public override bool PagarBoleto(decimal monto)
+        {
+            decimal cobrado = CobrarViaje(monto);
+            if (cobrado < 0) // indicación de fallo
+                return false;
+            // Si cobrado == 0 (viaje gratis) o >0 (ya se descontó en CobrarViaje), consideramos la operación exitosa
+            return true;
         }
     }
 }
