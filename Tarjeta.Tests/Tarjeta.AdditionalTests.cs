@@ -146,5 +146,122 @@ namespace Tarjeta.Tests
             // Invoke with an empty string[] argument
             main.Invoke(null, new object[] { new string[0] });
         }
+
+        [Test]
+        public void Colectivo_PagarCon_WithMonto_TarjetaNormal_SaldoSuficiente()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("123", 2000);
+            var colectivo = new Colectivo("102");
+
+            var boleto = colectivo.PagarCon(tarjeta, 700);
+
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual(700, boleto.TotalAbonado);
+            Assert.AreEqual(1300, boleto.SaldoRestante);
+        }
+
+        [Test]
+        public void Colectivo_PagarCon_WithMonto_TarjetaNormal_SaldoInsuficiente()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("123", 100);
+            var colectivo = new Colectivo("102");
+
+            var boleto = colectivo.PagarCon(tarjeta, 700);
+
+            Assert.IsNull(boleto);
+        }
+
+        [Test]
+        public void Colectivo_PagarCon_WithMonto_BEG_PrimerViaje()
+        {
+            var tarjeta = new BEG("123", 2000);
+            var colectivo = new Colectivo("102");
+
+            var boleto = colectivo.PagarCon(tarjeta, 700);
+
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual(0, boleto.TotalAbonado); // Primer viaje gratis
+            Assert.AreEqual(2000, boleto.SaldoRestante);
+        }
+
+        [Test]
+        public void Colectivo_PagarCon_WithMonto_MedioBoleto()
+        {
+            var tarjeta = new MedioBoleto("123", 2000);
+            var colectivo = new Colectivo("102");
+
+            var boleto = colectivo.PagarCon(tarjeta, 700);
+
+            Assert.IsNotNull(boleto);
+            Assert.AreEqual(350, boleto.TotalAbonado); // Medio boleto
+            Assert.AreEqual(1650, boleto.SaldoRestante);
+        }
+
+        [Test]
+        public void Trasbordo_SameLine_NoTrasbordo()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("t2", 10000);
+            var usuario = new Usuario("Ana", tarjeta);
+            var cole = new Colectivo("L1");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0); // Monday
+
+            var primero = tarjeta.PagarBoleto(usuario, cole, fecha);
+            Assert.AreEqual(700, primero.TotalAbonado);
+
+            // Second on same line -> no trasbordo
+            var segundo = tarjeta.PagarBoleto(usuario, cole, fecha.AddMinutes(30));
+            Assert.AreEqual(700, segundo.TotalAbonado); // Full price
+        }
+
+        [Test]
+        public void Trasbordo_OnSunday_NoTrasbordo()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("t3", 10000);
+            var usuario = new Usuario("Ana", tarjeta);
+            var cole1 = new Colectivo("L1");
+            var cole2 = new Colectivo("L2");
+            var fecha = new DateTime(2024, 10, 13, 8, 0, 0); // Sunday
+
+            var primero = tarjeta.PagarBoleto(usuario, cole1, fecha);
+            Assert.AreEqual(700, primero.TotalAbonado);
+
+            // Second on different line but Sunday -> no trasbordo
+            var segundo = tarjeta.PagarBoleto(usuario, cole2, fecha.AddMinutes(30));
+            Assert.AreEqual(700, segundo.TotalAbonado);
+        }
+
+        [Test]
+        public void Trasbordo_OutsideHours_NoTrasbordo()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("t4", 10000);
+            var usuario = new Usuario("Ana", tarjeta);
+            var cole1 = new Colectivo("L1");
+            var cole2 = new Colectivo("L2");
+            var fecha = new DateTime(2024, 10, 14, 23, 0, 0); // Monday late night
+
+            var primero = tarjeta.PagarBoleto(usuario, cole1, fecha);
+            Assert.AreEqual(700, primero.TotalAbonado);
+
+            // Second on different line but outside hours -> no trasbordo
+            var segundo = tarjeta.PagarBoleto(usuario, cole2, fecha.AddMinutes(30));
+            Assert.AreEqual(700, segundo.TotalAbonado);
+        }
+
+        [Test]
+        public void Trasbordo_AfterMoreThanOneHour_NoTrasbordo()
+        {
+            var tarjeta = new Tarjeta.Clases.Tarjeta("t5", 10000);
+            var usuario = new Usuario("Ana", tarjeta);
+            var cole1 = new Colectivo("L1");
+            var cole2 = new Colectivo("L2");
+            var fecha = new DateTime(2024, 10, 14, 8, 0, 0); // Monday
+
+            var primero = tarjeta.PagarBoleto(usuario, cole1, fecha);
+            Assert.AreEqual(700, primero.TotalAbonado);
+
+            // Second after 61 minutes -> no trasbordo
+            var segundo = tarjeta.PagarBoleto(usuario, cole2, fecha.AddMinutes(61));
+            Assert.AreEqual(700, segundo.TotalAbonado);
+        }
     }
 }
