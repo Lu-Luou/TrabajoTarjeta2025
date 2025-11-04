@@ -67,10 +67,20 @@ jobs:
 
       - name: "Debug: show which files will be uploaded to Codecov"
         run: |
-          echo "-- Files under ./coverage --"
-          powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName } } else { Write-Host 'No ./coverage directory found' }"
-          echo "-- Matching upload patterns --"
-          powershell -Command "$patterns = @('./coverage/**/coverage.cobertura.xml','./coverage/report/Cobertura.xml','./coverage/report/coverage.cobertura.xml'); foreach ($p in $patterns) { Write-Host 'Pattern:' $p; Get-ChildItem -Path './coverage' -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like ('*' + (Split-Path $p -Leaf)) } | ForEach-Object { Write-Host '  MATCH:' $_.FullName } }"
+          Write-Host "-- Files under ./coverage --"
+          if (Test-Path './coverage') {
+            Get-ChildItem -Path './coverage' -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
+          } else { Write-Host 'No ./coverage directory found' }
+          Write-Host "-- Matching upload patterns --"
+          $patterns = @('./coverage/**/coverage.cobertura.xml','./coverage/report/Cobertura.xml','./coverage/report/coverage.cobertura.xml')
+          foreach ($p in $patterns) {
+            Write-Host "Pattern: $p"
+            if (Test-Path './coverage') {
+              Get-ChildItem -Path './coverage' -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like ('*' + (Split-Path $p -Leaf)) } | ForEach-Object { Write-Host "  MATCH: $($_.FullName)" }
+            } else {
+              Write-Host "  (no coverage dir)"
+            }
+          }
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
