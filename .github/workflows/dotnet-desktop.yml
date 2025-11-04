@@ -54,16 +54,25 @@ jobs:
           $reportsArg = $reports -join ';'
           $reportGeneratorExe = Join-Path $env:USERPROFILE ".dotnet\tools\reportgenerator.exe"
           if (Test-Path $reportGeneratorExe) {
-            & $reportGeneratorExe -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
+            & $reportGeneratorExe -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura -sourcedirs:./Tarjeta
           } else {
             # fallback: call reportgenerator assuming it's on PATH
-            reportgenerator -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura
+            reportgenerator -reports:$reportsArg -targetdir:./coverage/report -reporttypes:Cobertura -sourcedirs:./Tarjeta
           }
 
       - name: "Debug: list final coverage artifacts"
         run: |
           echo "-- Final coverage directory listing --"
           powershell -Command "if (Test-Path './coverage') { Get-ChildItem -Path './coverage' -Recurse -Force | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Host 'No ./coverage directory found' }"
+
+      - name: "Debug: show start of Cobertura.xml if present"
+        run: |
+          echo "-- Cobertura file preview --"
+          if (Test-Path './coverage/report/Cobertura.xml') {
+            Get-Content -Path './coverage/report/Cobertura.xml' -TotalCount 200 | ForEach-Object { Write-Host $_ }
+          } else {
+            Write-Host 'No ./coverage/report/Cobertura.xml found'
+          }
 
       - name: "Debug: show which files will be uploaded to Codecov"
         run: |
@@ -88,7 +97,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: |
             ./coverage/**/coverage.cobertura.xml
-            ./coverage/report/Cobertura.xml
-            ./coverage/report/coverage.cobertura.xml
+            ./coverage/report/**
           fail_ci_if_error: true
           verbose: true
